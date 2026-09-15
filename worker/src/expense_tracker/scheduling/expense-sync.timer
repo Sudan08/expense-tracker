@@ -1,0 +1,25 @@
+# systemd --user timer. Section 6.4. Persistent=true is the whole point:
+# it re-runs a missed job on the next boot, which is what a laptop that's
+# off overnight actually needs.
+#
+# Two runs a day, and the second one is the one that matters for gap
+# filling. 21:30 refreshes ledger_gaps just before the app's 22:00 reminder
+# fires, so the list you sit down to fill in is the list as of tonight
+# rather than as of this morning. Running twice costs nothing: every run is
+# idempotent by DB constraint (invariant 5), so the second pass over the
+# same emails inserts nothing.
+#
+# Persistent=true fires only ONE catch-up run when several are missed, not
+# one per missed OnCalendar -- which is the behaviour you want here anyway,
+# since a catch-up run does the same work whichever slot it stands in for.
+
+[Unit]
+Description=Run expense tracker sync twice daily
+
+[Timer]
+OnCalendar=*-*-* 10:30:00
+OnCalendar=*-*-* 21:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

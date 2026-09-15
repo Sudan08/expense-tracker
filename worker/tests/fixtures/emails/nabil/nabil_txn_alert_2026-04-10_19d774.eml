@@ -1,0 +1,35 @@
+From: nBank <txn-alert@nabilbank.com>
+To: fixtureuser@example.com
+Subject: Transaction Alert
+Date: Fri, 10 Apr 2026 12:03:30 +0000
+Message-ID: <fixture-19d7747231633c37@reconstructed.local>
+X-Fixture-Source:
+ Gmail API FULL_CONTENT (not byte-identical raw MIME; body verbatim)
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============1212964368417390669=="
+
+--===============1212964368417390669==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+This is an HTML email. See fixture note.
+
+--===============1212964368417390669==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<table class=3D"body-wrap"><tr><td class=3D"container">
+<table><tr><td class=3D"content"><h4>Transaction Alert</h4>
+Dear TEST USER, Greetings! Please find transaction details for your account numbe=
+r 001#####234567 as below :</td></tr></table>
+<table><tr><td class=3D"content"><table border=3D"1"><tr><td>Transaction Date=
+</td><td>Transaction Type</td><td>Transaction Amount</td><td>Available Balanc=
+e</td><td>Remarks</td></tr>
+<tr><td>2026-04-10 15:31</td><td>Debit</td><td>5.00</td><td>245,309.92</td>=
+<td>C-ASBA Fee - IPO - BRAVO HYDROPOWER LIMITED</td></tr></table></td></tr><=
+/table>
+</td></tr></table>
+
+--===============1212964368417390669==--

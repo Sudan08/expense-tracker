@@ -1,0 +1,29 @@
+# Copy to ~/.expense-tracker/config.toml and edit.
+#
+# This is the NON-SECRET half of the worker's config. Credentials live in
+# ~/.expense-tracker/.env (see env.example next to this file) so that this
+# file can be read, diffed and pasted into a bug report safely.
+
+[worker]
+# Free-form label for this machine. Shows up in `expense-tracker status`, so
+# you can tell which machine last ran a sync when you use more than one.
+machine = "laptop"
+
+# Where raw .eml files are cached. This is a cache, not the source of truth --
+# your mailbox is. `retention` prunes it; deleting it entirely is safe.
+archive_dir = "~/.expense-tracker/raw"
+
+# Earliest date a first sync backfills to, before any successful run exists to
+# resolve a watermark from. Also what `--last all` means.
+account_start = "2025-01-01"
+
+[imap]
+host = "imap.gmail.com"
+username = "you@example.com"
+
+[senders]
+# Matched as a case-sensitive substring against the From header. Add your own
+# bank's domain here -- and see docs/ADDING_A_PARSER.md to teach the worker to
+# read its mail.
+esewa = "esewa.com.np"
+nabil = "nabilbank.com"

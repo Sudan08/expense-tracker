@@ -1,0 +1,37 @@
+# Native splash screen shown before Flutter's first frame is ready. Run
+# after changing anything here or the source art:
+#   dart run flutter_native_splash:create
+#
+# Reuses the app icon's own source (assets/branding/logo.png) rather than a
+# separate splash asset -- see flutter_launcher_icons.yaml for where it came
+# from. A splash image has no OS-imposed mask the way an adaptive icon does,
+# so the full-bleed card+glyph is used as-is here, centered on a background
+# matching its own card color.
+flutter_native_splash:
+  color: "#F5F8FD"
+  image: "assets/branding/logo.png"
+
+  # Dark mode: the app's own theme (core/theme.dart) follows the system
+  # brightness, so the splash should too rather than flashing a light screen
+  # on a phone set to dark. The icon image itself keeps its light card --
+  # that is normal splash behaviour (most apps show their square icon as a
+  # "chip" against the splash background regardless of theme) and needs no
+  # separate dark artwork.
+  color_dark: "#121212"
+  image_dark: "assets/branding/logo.png"
+
+  # Android 12+'s SplashScreen API enforces its own icon container and does
+  # not let content bleed to the edges (similar constraint to the adaptive
+  # icon's safe zone, and for the same reason: the OS decides the mask, not
+  # the app). Reusing icon_foreground.png -- already inset onto a matching
+  # background for exactly that reason -- avoids a second, differently-clipped
+  # version of the card appearing only on Android 12+.
+  android_12:
+    color: "#F5F8FD"
+    image: "assets/branding/icon_foreground.png"
+    color_dark: "#121212"
+    image_dark: "assets/branding/icon_foreground.png"
+
+  android: true
+  ios: true
+  web: false

@@ -1,0 +1,35 @@
+# App icon, generated for every platform/density from one source image.
+# Run after changing anything here or the source art:
+#   dart run flutter_launcher_icons
+#
+# Source: assets/branding/logo.png (the user-supplied
+# Gemini_Generated_Image_pvqpwcpvqpwcpvqp.jpeg, losslessly re-encoded to
+# PNG). It already fills its 2048x2048 canvas edge-to-edge -- a light card
+# with a small built-in corner radius, not a small logo floating on a white
+# margin -- so it works directly as a full-bleed icon with no cropping.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true # the App Store rejects an icon that carries alpha
+  image_path: "assets/branding/logo.png"
+
+  # Android adaptive icon (API 26+). The foreground is deliberately NOT the
+  # full-bleed source: the mask shape (circle, squircle, rounded square,
+  # teardrop -- picked by the launcher, not this app) only guarantees the
+  # inner ~66% "safe zone" of the foreground layer survives every shape, and
+  # the source's card+glyph fill close to 100% of its frame. Passing it
+  # through as-is would get a different slice of the card clipped off by
+  # every launcher.
+  #
+  # icon_foreground.png is the same artwork scaled down to fit inside that
+  # safe zone, centered on a canvas filled with adaptive_icon_background's
+  # own color -- see assets/branding/README.md for how it was generated.
+  # Because the padding matches the background exactly, every mask shape
+  # shows the same result: the glyph on a uniform field, never a cut corner.
+  adaptive_icon_background: "#F5F8FD"
+  adaptive_icon_foreground: "assets/branding/icon_foreground.png"
+  # icon_foreground.png is already scaled into the safe zone with matching-
+  # color padding baked in (see assets/branding/README.md). The tool's own
+  # default inset (16%) exists for a foreground that fills its whole frame;
+  # applying it on top of ours would shrink the glyph twice.
+  adaptive_icon_foreground_inset: 0

@@ -1,0 +1,33 @@
+From: nBank <txn-alert@nabilbank.com>
+To: fixtureuser@example.com
+Subject: Transaction Alert
+Date: Mon, 18 May 2026 14:46:32 +0000
+Message-ID: <fixture-19e3b8d915ee8307@reconstructed.local>
+X-Fixture-Source:
+ Gmail API FULL_CONTENT (not byte-identical raw MIME; body verbatim)
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============0182577048448840915=="
+
+--===============0182577048448840915==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+This is an HTML email. See fixture note.
+
+--===============0182577048448840915==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<table class=3D"body-wrap"><tr><td class=3D"container">
+<table><tr><td class=3D"content"><h4>Transaction Alert</h4>
+Dear TEST USER, Greetings! Please find transaction details for your account numbe=
+r 001#####234567 as below :</td></tr></table>
+<table><tr><td class=3D"content"><table border=3D"1"><tr><td>Transaction Date=
+</td><td>Transaction Type</td><td>Transaction Amount</td><td>Available Balanc=
+e</td><td>Remarks</td></tr>
+<tr><td>2026-05-18 19:09</td><td>Debit</td><td>2,500.00</td><td>259,547.49</td><td>eSewa Load 9800000003, 261277999</td></tr></table></td></tr></table>
+</td></tr></table>
+
+--===============0182577048448840915==--

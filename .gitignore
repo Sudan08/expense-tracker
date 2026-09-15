@@ -1,0 +1,50 @@
+.env
+*.env
+!*.env.example
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+.DS_Store
+
+# local archive of raw emails and worker state — never committed
+.expense-tracker/
+raw/
+
+# The real worker config lives in ~/.expense-tracker/, never in the repo.
+# These two guard against someone copying the templates into place here:
+# config.toml holds the mailbox address, .env holds the app password and the
+# database URL. Templates are worker/config.toml.example and worker/env.example.
+config.toml
+worker/config.toml
+
+# Flutter app secrets -- anon key + project URL, not committed
+mobile/.env
+
+# Android release signing. The keystore itself lives outside the repo
+# entirely (~/.android-keystores/), so these are defense in depth, not the
+# only thing standing between the signing passwords and git.
+mobile/android/key.properties
+*.jks
+*.keystore
+
+# Machine-local toolchain paths (SDK locations, absolute paths to this
+# checkout). Harmless but noisy, and they leak the local username.
+mobile/android/local.properties
+mobile/android/.gradle/
+mobile/ios/Flutter/Generated.xcconfig
+mobile/ios/Flutter/flutter_export_environment.sh
+mobile/ios/Flutter/ephemeral/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.dart_tool/
+
+# Editor state
+.idea/
+*.iml
+.vscode/

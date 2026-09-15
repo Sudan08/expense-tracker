@@ -1,0 +1,33 @@
+From: nBank <txn-alert@nabilbank.com>
+To: fixtureuser@example.com
+Subject: Transaction Alert
+Date: Fri, 29 May 2026 02:57:05 +0000
+Message-ID: <fixture-19e71aa034eae777@reconstructed.local>
+X-Fixture-Source:
+ Gmail API FULL_CONTENT (not byte-identical raw MIME; body verbatim)
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============6368073227620475342=="
+
+--===============6368073227620475342==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+This is an HTML email. See fixture note.
+
+--===============6368073227620475342==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<table class=3D"body-wrap"><tr><td class=3D"container">
+<table><tr><td class=3D"content"><h4>Transaction Alert</h4>
+Dear TEST USER, Greetings! Please find transaction details for your account numbe=
+r 001#####234567 as below :</td></tr></table>
+<table><tr><td class=3D"content"><table border=3D"1"><tr><td>Transaction Date=
+</td><td>Transaction Type</td><td>Transaction Amount</td><td>Available Balanc=
+e</td><td>Remarks</td></tr>
+<tr><td>2026-05-29 08:41</td><td>Debit</td><td>15,000.00</td><td>290,783.49</td><td>ATM WDL -03051911-NABIL-NABIL</td></tr></table></td></tr></table>
+</td></tr></table>
+
+--===============6368073227620475342==--

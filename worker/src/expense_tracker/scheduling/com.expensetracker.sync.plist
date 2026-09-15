@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd agent. Section 6.4. Installed by scripts/setup-wizard.sh, which
+  substitutes __EXEC_PATH__, __WORKING_DIRECTORY__, and __LOG_DIR__ for this
+  machine's actual paths -- don't hand-install this file as-is.
+
+  StartCalendarInterval fires a missed run on wake, the same semantic as the
+  systemd timer's Persistent=true -- no RunAtLoad needed.
+
+  Two runs a day, given as an ARRAY of dicts (a single dict is the one-time
+  form; launchd silently accepts either, and reads only the last-wins keys
+  if you try to put two Hour keys in one dict). The 21:30 run is the one
+  that matters for gap filling: it refreshes ledger_gaps just before the
+  app's 22:00 reminder fires, so the list you sit down to fill in is
+  tonight's rather than this morning's. Running twice costs nothing -- every
+  run is idempotent by DB constraint (invariant 5).
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.expensetracker.sync</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__EXEC_PATH__</string>
+        <string>sync</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__WORKING_DIRECTORY__</string>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Hour</key>
+            <integer>10</integer>
+            <key>Minute</key>
+            <integer>30</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>21</integer>
+            <key>Minute</key>
+            <integer>30</integer>
+        </dict>
+    </array>
+    <key>StandardOutPath</key>
+    <string>__LOG_DIR__/expense-sync.log</string>
+    <key>StandardErrorPath</key>
+    <string>__LOG_DIR__/expense-sync.err.log</string>
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

@@ -1,0 +1,419 @@
+# Phase 0 fixture corpus -- hand-derived expected parse output.
+# See docs/EXPENSE_TRACKER_PLAN.md section 8 for the nabil.txn_alert / esewa.fund_load specs.
+# nabil.card_txn has NO spec in the plan yet (section 8.3 anticipated it, zero fixtures existed before this).
+#   -> template_key, channel, and dedupe_key formula for nabil.card_txn are PROVISIONAL, proposed here,
+#      and need a human to confirm/promote them into section 8 before Phase 1 parser code is written.
+#   -> nabil.card_txn amounts are USD, not NPR -- the plan's money invariant (section 2, 'amount_paisa bigint')
+#      implicitly assumes NPR. Flagged as amount_subunit/currency=USD here; needs an explicit decision.
+# channel_guess values beyond the section 8.3 vocabulary (ATM/FONEPAY/IPS/CONNECTIPS/POS/MOBILE_BANKING/
+# CHARGE/INTEREST): SALARY, ESEWA_LOAD, IPO_ALLOTMENT, CARD_FX, MOBILE_BANKING(for bare 'MPAY' without FPQR).
+# These are real, frequent patterns in the actual mailbox that the documented vocabulary doesn't cover.
+
+esewa/esewa_fund_load_2026-08-31.eml:
+  template_key: "esewa.fund_load"
+  occurred_at: "2026-08-31T09:45:53+05:45"
+  occurred_precision: "SECOND"
+  direction: "CREDIT"
+  amount_paisa: 100000
+  currency: "NPR"
+  description_raw: "NABIL BANK LTD."
+  reference: "1PWB11H"
+  counterparty: "NABIL BANK LTD."
+  channel: "WALLET_LOAD"
+  transfer_candidate: true
+  dedupe_key: "esewa:1PWB11H"
+
+esewa/esewa_payment_success_2026-09-03.eml:
+  template_key: "esewa.payment_success"
+  occurred_at: "2026-09-03T13:24:29+05:45"
+  occurred_precision: "SECOND"
+  direction: "DEBIT"
+  amount_paisa: 32000
+  currency: "NPR"
+  description_raw: "Fonepay Payment"
+  reference: "1Q5D142"
+  counterparty: "Fonepay Payment"
+  channel: "WALLET_PAYMENT"
+  transfer_candidate: false
+  dedupe_key: "esewa:1Q5D142"
+
+nabil/nabil_card_txn_2026-05-02_19de73.eml:
+  template_key: "nabil.card_txn"
+  occurred_at: "2026-05-02T00:00:00+05:45"
+  occurred_precision: "DAY"
+  direction: "DEBIT"
+  amount_subunit: 2000
+  currency: "USD"
+  description_raw: "OPENAI *CHATGPT SUBSCR; +14158799686 USA"
+  counterparty: "OPENAI *CHATGPT SUBSCR"
+  channel: "CARD_FX"
+  card_mask: "XXXX4321"
+  dedupe_key_provisional: "nabil:XXXX4321:2026-05-02:DEBIT:2000:b697db9a"
+  note: "template_key/channel/dedupe_key are provisional -- plan has no spec for this template yet (see report)"
+
+nabil/nabil_card_txn_2026-05-05_19df63.eml:
+  template_key: "nabil.card_txn"
+  occurred_at: "2026-05-05T00:00:00+05:45"
+  occurred_precision: "DAY"
+  direction: "DEBIT"
+  amount_subunit: 495
+  currency: "USD"
+  description_raw: "PAYPAL *CONTABO; 35314369001 DEU"
+  counterparty: "PAYPAL *CONTABO"
+  channel: "CARD_FX"
+  card_mask: "XXXX4321"
+  dedupe_key_provisional: "nabil:XXXX4321:2026-05-05:DEBIT:495:5fe5e917"
+  note: "template_key/channel/dedupe_key are provisional -- plan has no spec for this template yet (see report)"
+
+nabil/nabil_card_txn_2026-06-02_19e871.eml:
+  template_key: "nabil.card_txn"
+  occurred_at: "2026-06-02T00:00:00+05:45"
+  occurred_precision: "DAY"
+  direction: "DEBIT"
+  amount_subunit: 2000
+  currency: "USD"
+  description_raw: "OPENAI *CHATGPT SUBSCR; +14158799686 USA"
+  counterparty: "OPENAI *CHATGPT SUBSCR"
+  channel: "CARD_FX"
+  card_mask: "XXXX4321"
+  dedupe_key_provisional: "nabil:XXXX4321:2026-06-02:DEBIT:2000:b697db9a"
+  note: "template_key/channel/dedupe_key are provisional -- plan has no spec for this template yet (see report)"
+
+nabil/nabil_card_txn_2026-08-18_1a0128.eml:
+  template_key: "nabil.card_txn"
+  occurred_at: "2026-08-18T00:00:00+05:45"
+  occurred_precision: "DAY"
+  direction: "DEBIT"
+  amount_subunit: 2260
+  currency: "USD"
+  description_raw: "GOOGLE *CLAUDE BY ANTH; MOUNTAIN VIEW, 1600 AMPHIT USA"
+  counterparty: "GOOGLE *CLAUDE BY ANTH"
+  channel: "CARD_FX"
+  card_mask: "XXXX4321"
+  dedupe_key_provisional: "nabil:XXXX4321:2026-08-18:DEBIT:2260:c5b23e1a"
+  note: "template_key/channel/dedupe_key are provisional -- plan has no spec for this template yet (see report)"
+
+nabil/nabil_txn_alert_2026-02-25_19c942.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-02-25T14:40:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 500
+  balance_after_paisa: 18543055
+  currency: "NPR"
+  description_raw: "C-ASBA Fee - IPO - ALPHA CEMENT INDUSTRIES LIMITED"
+  channel_guess: "CHARGE"
+  dedupe_key: "nabil:001#####234567:2026-02-25T14:40:DEBIT:500:d15e3a61"
+
+nabil/nabil_txn_alert_2026-03-15_19cf0d.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-03-15T15:19:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 1250000
+  balance_after_paisa: 17067555
+  currency: "NPR"
+  description_raw: "MPAY FPQR,32360490aOfu,EXAMPLE EDUCATION SERVICE"
+  channel_guess: "FONEPAY"
+  dedupe_key: "nabil:001#####234567:2026-03-15T15:19:DEBIT:1250000:26dbebbb"
+
+nabil/nabil_txn_alert_2026-03-31_19d440.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-03-31T18:54:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "CREDIT"
+  amount_paisa: 5250000
+  balance_after_paisa: 23617992
+  currency: "NPR"
+  description_raw: "salary for March, 2026 260331-10000001.1"
+  channel_guess: "SALARY"
+  dedupe_key: "nabil:001#####234567:2026-03-31T18:54:CREDIT:5250000:a30fa697"
+
+nabil/nabil_txn_alert_2026-04-10_19d774.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-04-10T15:31:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 500
+  balance_after_paisa: 24530992
+  currency: "NPR"
+  description_raw: "C-ASBA Fee - IPO - BRAVO HYDROPOWER LIMITED"
+  channel_guess: "CHARGE"
+  dedupe_key: "nabil:001#####234567:2026-04-10T15:31:DEBIT:500:7bcd000a"
+
+nabil/nabil_txn_alert_2026-04-17_19d9ab.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-04-17T13:29:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 50000
+  balance_after_paisa: 24306249
+  currency: "NPR"
+  description_raw: "eSewa Load 9800000002, 249135736"
+  channel_guess: "ESEWA_LOAD"
+  dedupe_key: "nabil:001#####234567:2026-04-17T13:29:DEBIT:50000:e511bb42"
+
+nabil/nabil_txn_alert_2026-04-30_19dddb.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-04-30T14:37:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "CREDIT"
+  amount_paisa: 5250000
+  balance_after_paisa: 29756249
+  currency: "NPR"
+  description_raw: "salary for April, 2026 260429-10000002.1"
+  channel_guess: "SALARY"
+  dedupe_key: "nabil:001#####234567:2026-04-30T14:37:CREDIT:5250000:695c7153"
+
+nabil/nabil_txn_alert_2026-05-03_19dec3.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-05-03T10:55:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 1500000
+  balance_after_paisa: 28155749
+  currency: "NPR"
+  description_raw: "ATM WDL -03051911-NABIL-NABIL"
+  channel_guess: "ATM"
+  dedupe_key: "nabil:001#####234567:2026-05-03T10:55:DEBIT:1500000:e9b9024d"
+
+nabil/nabil_txn_alert_2026-05-07_19e01f.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-05-07T15:23:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 500
+  balance_after_paisa: 26655249
+  currency: "NPR"
+  description_raw: "C-ASBA Fee - IPO-CHARLIE KHOLA HYDROPOWER LIMITED"
+  channel_guess: "CHARGE"
+  dedupe_key: "nabil:001#####234567:2026-05-07T15:23:DEBIT:500:5c03898f"
+
+nabil/nabil_txn_alert_2026-05-15_19e296.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-05-15T07:53:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 100000
+  balance_after_paisa: 26204749
+  currency: "NPR"
+  description_raw: "CASBA allot of IPO -DELTA HYDROPOWER LIMITED"
+  channel_guess: "IPO_ALLOTMENT"
+  dedupe_key: "nabil:001#####234567:2026-05-15T07:53:DEBIT:100000:e7f3b213"
+
+nabil/nabil_txn_alert_2026-05-18_19e3b8.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-05-18T19:09:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 250000
+  balance_after_paisa: 25954749
+  currency: "NPR"
+  description_raw: "eSewa Load 9800000003, 261277999"
+  channel_guess: "ESEWA_LOAD"
+  dedupe_key: "nabil:001#####234567:2026-05-18T19:09:DEBIT:250000:8f73aeb5"
+
+nabil/nabil_txn_alert_2026-05-22_19e4fa.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-05-22T16:38:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 500
+  balance_after_paisa: 25954249
+  currency: "NPR"
+  description_raw: "C-ASBA Fee - IPO - ECHO HYDRO LIMITED"
+  channel_guess: "CHARGE"
+  dedupe_key: "nabil:001#####234567:2026-05-22T16:38:DEBIT:500:b77637c6"
+
+nabil/nabil_txn_alert_2026-05-24_19e5a7.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-05-24T20:14:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 149900
+  balance_after_paisa: 25401349
+  currency: "NPR"
+  description_raw: "MPAY FPQR,41749528iKRz,BMTC,Remarks 1;Remarks 2"
+  channel_guess: "FONEPAY"
+  dedupe_key: "nabil:001#####234567:2026-05-24T20:14:DEBIT:149900:19d712e8"
+
+nabil/nabil_txn_alert_2026-05-28_19e6e5.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-05-28T17:09:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "CREDIT"
+  amount_paisa: 5250000
+  balance_after_paisa: 30751349
+  currency: "NPR"
+  description_raw: "salary for May, 2026 260528-10000003.1"
+  channel_guess: "SALARY"
+  dedupe_key: "nabil:001#####234567:2026-05-28T17:09:CREDIT:5250000:0e8c12ff"
+
+nabil/nabil_txn_alert_2026-05-29_19e71a.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-05-29T08:41:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 1500000
+  balance_after_paisa: 29078349
+  currency: "NPR"
+  description_raw: "ATM WDL -03051911-NABIL-NABIL"
+  channel_guess: "ATM"
+  dedupe_key: "nabil:001#####234567:2026-05-29T08:41:DEBIT:1500000:e9b9024d"
+
+nabil/nabil_txn_alert_2026-06-03_19e8bd.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-06-03T10:41:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 320000
+  balance_after_paisa: 28497549
+  currency: "NPR"
+  description_raw: "MPAY FPQR,429776925cyr,EXAMPLE HEALTH CARE CENTRE"
+  channel_guess: "FONEPAY"
+  dedupe_key: "nabil:001#####234567:2026-06-03T10:41:DEBIT:320000:1cf73a54"
+
+nabil/nabil_txn_alert_2026-06-04_19e908.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-06-04T08:31:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 125000
+  balance_after_paisa: 28272049
+  currency: "NPR"
+  description_raw: "MPAY FPQR,43099870OOWA,EXAMPLE PHARMACY,medicine"
+  channel_guess: "FONEPAY"
+  dedupe_key: "nabil:001#####234567:2026-06-04T08:31:DEBIT:125000:a9268502"
+
+nabil/nabil_txn_alert_2026-06-07_19ea20.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-06-07T18:06:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 600000
+  balance_after_paisa: 27672049
+  currency: "NPR"
+  description_raw: "ESW DLA:MUMUE5O1"
+  channel_guess: "ESEWA_LOAD"
+  dedupe_key: "nabil:001#####234567:2026-06-07T18:06:DEBIT:600000:19ab3168"
+
+nabil/nabil_txn_alert_2026-06-08_19ea85.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-06-08T18:34:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 500
+  balance_after_paisa: 24770549
+  currency: "NPR"
+  description_raw: "C-ASBA Fee - IPO- FOXTROT COLOUR LIMITED"
+  channel_guess: "CHARGE"
+  dedupe_key: "nabil:001#####234567:2026-06-08T18:34:DEBIT:500:f1bb8b6e"
+
+nabil/nabil_txn_alert_2026-06-14_19ec50.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-06-14T13:13:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 500
+  balance_after_paisa: 24770049
+  currency: "NPR"
+  description_raw: "C-ASBA Fee - IPO -GOLF PAINTS INDUSTRIES LIMITED"
+  channel_guess: "CHARGE"
+  dedupe_key: "nabil:001#####234567:2026-06-14T13:13:DEBIT:500:6bbe7e09"
+
+nabil/nabil_txn_alert_2026-06-24_19ef7b.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-06-24T09:26:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 400000
+  balance_after_paisa: 24469549
+  currency: "NPR"
+  description_raw: "ATM WDL -03051911-NABIL-NABIL"
+  channel_guess: "ATM"
+  dedupe_key: "nabil:001#####234567:2026-06-24T09:26:DEBIT:400000:e9b9024d"
+
+nabil/nabil_txn_alert_2026-07-03_19f27f.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-07-03T17:53:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 1800000
+  balance_after_paisa: 29715449
+  currency: "NPR"
+  description_raw: "ESW DLA:MVNZDD61"
+  channel_guess: "ESEWA_LOAD"
+  dedupe_key: "nabil:001#####234567:2026-07-03T17:53:DEBIT:1800000:86ae7423"
+
+nabil/nabil_txn_alert_2026-07-23_19f8f2.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-07-23T19:07:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 25000
+  balance_after_paisa: 29019971
+  currency: "NPR"
+  description_raw: "MPAY NABIL,288000000,9800000001,TEST USER"
+  channel_guess: "MOBILE_BANKING"
+  dedupe_key: "nabil:001#####234567:2026-07-23T19:07:DEBIT:25000:c9a92e7b"
+
+nabil/nabil_txn_alert_2026-08-02_19fc1c.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-08-02T15:03:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 8500000
+  balance_after_paisa: 20519971
+  currency: "NPR"
+  description_raw: "MPAY EXAMPLEBK;55500000044,00100002234567,laptop,S"
+  channel_guess: "MOBILE_BANKING"
+  dedupe_key: "nabil:001#####234567:2026-08-02T15:03:DEBIT:8500000:a0dacdca"
+
+nabil/nabil_txn_alert_2026-08-03_19fc7e.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-08-03T19:11:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "CREDIT"
+  amount_paisa: 5480000
+  balance_after_paisa: 14697971
+  currency: "NPR"
+  description_raw: "salary for July, 2026 260803-10000004.1"
+  channel_guess: "SALARY"
+  dedupe_key: "nabil:001#####234567:2026-08-03T19:11:CREDIT:5480000:0f733016"
+
+nabil/nabil_txn_alert_2026-08-10_19feb9.eml:
+  template_key: "nabil.txn_alert"
+  account_mask: "001#####234567"
+  occurred_at: "2026-08-10T17:33:00+05:45"
+  occurred_precision: "MINUTE"
+  direction: "DEBIT"
+  amount_paisa: 800000
+  balance_after_paisa: 10297971
+  currency: "NPR"
+  description_raw: "ATM WDL -03051911-NABIL-NABIL"
+  channel_guess: "ATM"
+  dedupe_key: "nabil:001#####234567:2026-08-10T17:33:DEBIT:800000:e9b9024d"

@@ -1,0 +1,12 @@
+# systemd --user unit. Section 6.4. Installed by scripts/setup-wizard.sh,
+# which substitutes __WORKING_DIRECTORY__ and __EXEC_START__ for this
+# machine's actual repo/venv paths -- don't hand-install this file as-is.
+[Unit]
+Description=Expense tracker daily sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=__WORKING_DIRECTORY__
+ExecStart=__EXEC_START__

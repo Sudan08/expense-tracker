@@ -1,0 +1,500 @@
+Delivered-To: fixtureuser@example.com
+Received: by 2002:a17:504:8a82:10b0:1e9d:2920:64ae with SMTP id
+ en2-n1csp1169167njb;
+        Thu, 3 Sep 2026 00:39:31 -0700 (PDT)
+X-Received: by 2002:a17:90b:4c44:b0:38d:b36e:9813 with SMTP id
+ 98e67ed59e1d1-39aee0188bbmr16523590a91.11.1788421171254;
+        Thu, 03 Sep 2026 00:39:31 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788421171; cv=none;
+        d=google.com; s=arc-20260327;
+        b=d7QQgdI34TCDUxmUr9fYmbVBl7V26VGFiVODALH5fIPN2oyovUNE816tkuMAn16hAN
+         2HNT/n05cLI8RhtALIOiqQ+k13ymsFKkm7imYZnrZdg6+lvwyznRyY8Dkhz1FJ7s3QlW
+         X2GYbKfSOWdIKCcVhMgqxTt8BvMSB6QHxfA0e9TmAH23ip4G0EEmOHEsq6L/HU+oNOnC
+         8vMLXKSrb8ZBKjHbE36sE7l9munUhjXUDx8TZrTNDCBvTmebbxudTxQg2azAJFD1cFr7
+         eW+recloW1yPtuTr3pSUg3QFTqxE+k/iJS0DGDHVu8Pko6p8k5LFbEx/Fm/PPl2V+aQj
+         DTwg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com;
+ s=arc-20260327;
+        h=mime-version:subject:message-id:to:sender:from:date:dkim-signature;
+        bh=VTbMBTFhBr2BxcxNlqNqd1b3pJb7qM/bf4nzrOyLrKQ=;
+        fh=iBWK6qeaDWkoKCIunSc0S0kWxz+gwCLluws08NsFfjI=;
+        b=OTsc3FoFxHk9gnLYKOL9jR1p3ueCqLFG0BKcMp/YRgdBQ9ZwIbI8fyRXEv/LfgX5r/
+         76Nt/Xf+GtBHBgP3fUvwsSJZ55aDJCe2r4yn5jqo+wxVuhe/KBFr3h2E01Pfjgb1BDno
+         I6WQkoJn7y6OlgSzGjGDG5dzH8Sukgodf+3RT1VRNwwTfr/LpKSEbpDfutfXvcCef/Rd
+         3mb/km+aF5IBQA0+EqEqjC537RowTQZ9VvhwwvOriPDUfr3wsSUOyiBVayIDOOa4/cq5
+         f1V5hKt3M79dma5+fZomVbwQDFZOqFuBmPPqm2HTmim0p1KFgc2oZne0bwbMH1kbutHl
+         o8DA==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@esewa.com.np header.s=mail header.b=prNbOM6N;
+       spf=pass (google.com: domain of donotreply@esewa.com.np designates
+ 103.255.126.8 as permitted sender) smtp.mailfrom=donotreply@esewa.com.np;
+       dmarc=pass (p=NONE sp=REJECT dis=NONE) header.from=esewa.com.np
+Return-Path: <donotreply@esewa.com.np>
+Received: from f1soft.com (mx-05.f1soft.com. [103.255.126.8])
+        by mx.google.com with ESMTPS id
+ a92af1059eb24-14319b0ccb0si7630486c88.20.2026.09.03.00.39.30
+        for <fixtureuser@example.com>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 03 Sep 2026 00:39:30 -0700 (PDT)
+Received-SPF: pass (google.com: domain of donotreply@esewa.com.np designates
+ 103.255.126.8 as permitted sender) client-ip=103.255.126.8;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@esewa.com.np header.s=mail header.b=prNbOM6N;
+       spf=pass (google.com: domain of donotreply@esewa.com.np designates
+ 103.255.126.8 as permitted sender) smtp.mailfrom=donotreply@esewa.com.np;
+       dmarc=pass (p=NONE sp=REJECT dis=NONE) header.from=esewa.com.np
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=esewa.com.np; s=mail; h=Content-Type:MIME-Version:Subject:Message-ID:To:
+	Sender:From:Date:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=VTbMBTFhBr2BxcxNlqNqd1b3pJb7qM/bf4nzrOyLrKQ=; b=prNbOM6NErQDizZmZUEYwSFZBj
+	kNylcZwVdkUGRF4CjVgsyLvX6Dk3JjgGSS010tOCCyEqshbziBhSpLBQHgYCSFJh1LNleELnRnVgB
+	VtGblEWIS8lXrvEDQNJ6K3S5M8ff6YQ99p8M5kyFmwnsgpwbnAYgtSUuHRjVcKoYR3mo=;
+Authentication-Results: localhost;
+	iprev=fail smtp.remote-ip=10.13.222.80;
+	spf=fail smtp.mailfrom=esewa.com.np;
+	dmarc=none header.from=esewa.com.np
+Received: from [10.13.222.80] (helo=ns-03.esewa.com.np)
+	by f1soft.com stage1 with esmtp
+	(Exim MailCleaner)
+	id 1x222h-000ESP-P2
+	for <fixtureuser@example.com>
+	from <donotreply@esewa.com.np>; Thu, 03 Sep 2026 13:24:27 +0545
+X-MailCleaner-return_path: donotreply@esewa.com.np
+X-MailCleaner-sender_address: donotreply@esewa.com.np
+X-MailCleaner-recipients: fixtureuser@example.com
+Date: Thu, 3 Sep 2026 13:24:28 +0545 (NPT)
+From: eSewa <donotreply@esewa.com.np>
+Sender: eSewa <donotreply@esewa.com.np>
+To: "fixtureuser@example.com" <fixtureuser@example.com>
+Message-ID: <1284249856.508934.1788421168803@ns-03.esewa.com.np>
+Subject: eSewa Transaction Notification
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_508932_43132354.1788421168794"
+X-MailCleaner-TrustedIPs: Ok
+X-MailCleaner-RDNS: invalid reverse DNS for 10.13.222.80
+
+------=_Part_508932_43132354.1788421168794
+Content-Type: multipart/related;
+	boundary="----=_Part_508933_225604082.1788421168794"
+
+------=_Part_508933_225604082.1788421168794
+Content-Type: text/html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+
+
+
+    
+<p><title> eSewa email</title></p>
+    
+<p><style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: arial, serif;
+        }
+
+        body {
+            background-color: #fafafa;
+        }
+
+        .clearfix:after {
+            visibility: hidden;
+            display: block;
+            font-size: 0;
+            content: " ";
+            clear: both;
+            height: 0;
+        }
+
+        .left {
+            float: left;
+        }
+
+        .right {
+            float: right;
+        }
+
+        .container {
+            width: 700px;
+            margin: 0 auto;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        a {
+            list-style: none;
+        }
+
+        p {
+            text-align: justify;
+        }
+
+        h3 {
+            font-size: 15px;
+            padding-top: 20px;
+        }
+
+        .msg-header {
+            margin: 0 auto;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .msg-header img {
+            width: 140px;
+        }
+
+        .msg-body {
+            border-radius: 2px;
+            background-color: #fff;
+            padding: 30px
+        }
+
+        .msg-body h2 {
+            font-family: "Helvetica Neue", sans-serif;
+            color: #444;
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .msg-body p {
+            margin: 15px 0;
+            line-height: 1.4;
+            color: #6b6b6b;
+            font-weight: 500;
+        }
+
+        .msg-body .es-name {
+            font-weight: 700;
+            padding-top: 10px;
+        }
+
+        .msg-body .es-slogan {
+            font-size: 14px;
+            padding-bottom: 10px;
+            color: #999;
+        }
+
+        .msg-body .es-services {
+            position: relative;
+        }
+
+        .msg-body .es-service-inner {
+            color: #999;
+        }
+
+        .msg-body .es-vr-line {
+            height: 2px;
+            width: 100%;
+            display: none;
+            top: 15px;
+            background-color: #e9e9e9;
+        }
+
+        .es-servicelist > ul > li {
+            float: left;
+            list-style: none;
+            border-right: 1px solid black;
+            padding-right: 10px;
+            padding-left: 10px;
+        }
+
+        .es-service {
+            width: 100%;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .es-servicelist {
+            width: 100%;
+            margin: 0 auto;
+            font-size: 8px;
+            padding-bottom: 15px;
+            padding-top: 15px;
+            color: #61BB46;
+            text-align: center;
+        }
+
+        .es-servicelist img {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .msg-footer {
+            width: 100%;
+            margin: 0 auto;
+            padding-top: 3px;
+            height: 72px;
+        }
+
+        .msg-footer > .appstore > .logos > ul > li {
+            list-style: none;
+            float: left;
+            font-size: 8px;
+        }
+
+        .logos {
+            width: 100%;
+            padding-right: 10px;
+        }
+
+        .es-address {
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #989898;
+            margin-top: 10px;
+        }
+
+        .es-sociallink,
+        .es-appstore {
+            width: 50%;
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
+
+        .es-service-inner h3 {
+            padding: 10px;
+            background: #fff;
+            border-bottom: 2px solid #e9e9e9;
+        }
+
+        .es-msg-title {
+            color: #989898;
+            margin-bottom: 5px;
+        }
+
+        .es-link img,
+        .es-icon img {
+            width: 18px;
+            margin-right: 10px;
+        }
+
+        .es-banner img {
+            width: 100%;
+        }
+
+        .buttondiv {
+            width: 100%;
+            margin: 0 auto;
+            padding-left: 163px;
+            padding-bottom: 10px;
+            padding-top: 10px;
+        }
+
+        .button {
+            border-radius: 8px;
+            padding: 10px 24px;
+            background-color: green;
+            color: white;
+        }
+
+        table {
+            display: table;
+            width: 100%;
+        }
+
+        tbody {
+            display: table-row-group;
+            vertical-align: middle;
+        }
+
+        .es-btn-grp {
+            text-align: center;
+            padding: 10px 0;
+            margin-top: 15px;
+        }
+
+        .es-btn-grp a {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            background: #60bb48;
+            text-decoration: none;
+            border-radius: 5px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -o-border-radius: 5px;
+            padding: 12px 20px;
+        }
+
+        .es-btn-grp a:hover {
+            opacity: 0.8;
+        }
+
+        .es-hint-txt {
+            margin-top: 30px;
+            color: #454545;
+        }
+
+        .es-trans-name {
+            font-size: 15px;
+            font-weight: bold;
+            color: #5a5a5a;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .es-npr {
+            font-size: 14px;
+            font-weight: 700;
+            margin-left: 2px;
+        }
+
+        code {
+            font-family: monospace !important;
+        }
+
+        .es-fs-12 {
+            font-size: 12px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: #f5f7fd;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2
+        }
+
+        th {
+            background-color: #41A124;
+            color: white;
+        }
+    </style></p>
+
+
+
+<table>
+    <tbody>
+    <tr>
+        <td>
+            <div class="container">
+                <div class="msg-header">
+                    <img src="https://cdn.esewa.com.np/ui/images/logos/esewa-logo.png" alt="eSewa-logo">
+                </div>
+                <div class="msg-body">
+                    <div>
+    <h5>Dear Test User,</h5>
+    <p>Thank you for the payment. The details are as follows: </p>
+    <table border="1">
+        <thead>
+        <tr>
+            <th>Merchant Name</th>
+            <th>Transaction Date</th>
+            <th>Transaction Code</th>
+            <th>Transaction Amount (NPR)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+                <td>Fonepay Payment</td>
+
+                <td>03 Sep 2026, 01:24:29 PM</td>
+
+                <td>1Q5D142</td>
+
+                <td>320.0</td>
+        </tbody>
+    </table>
+    <p><b>
+	To view more details, please login to eSewa app and tap on Statement or <a href="https://esewa.com.np/#/transaction/1Q5D142/1">click here</a> to view statement.
+      </b></p>
+</div>
+
+
+
+                    <p>Link bank account in eSewa and load easily. Know more at
+                    <a href="http://bit.ly/AccountLink" target="_blank"> bit.ly/AccountLink</a></p>
+                    <h3>Thank You !!!</h3>
+                    <div class="es-name">eSewa</div>
+                    <div class="es-slogan">Pay | Send | Receive</div>
+
+                    <div class="es-service">
+                        <div class="es-services">
+                            <div class="es-vr-line">
+                            </div>
+                            <div class="es-service-inner">
+                                <h3>eSewa Services</h3>
+                            </div>
+                        </div>
+                        <a href="https://esewa.com.np" target="_blank">
+                            <div class="es-servicelist"><img src="https://cdn.esewa.com.np/ui/images/email/services.png" width="680px" alt="services"></div>
+                        </a>
+                    </div>
+
+                    <div class="es-banner">
+                        <div class="es-img-ads">
+                            <img src="https://cdn.esewa.com.np/digitalmarketting/emailFooterBanner.jpg" alt="mail-footer">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="msg-footer">
+                    <div class="es-address">
+                        eSewa Ltd. Pulchowk, Lalitpur, Nepal Toll Free: 1660-01-02121
+                        <br> csd@esewa.com.np
+                    </div>
+
+                    <div class="es-sociallink text-left clearfix left">
+                        <div class="es-msg-title">
+                            <h6>Connect with us</h6>
+                        </div>
+                        <div class="es-link">
+                            <a href="https://www.facebook.com/esewa" target="_blank"><img src="https://cdn.esewa.com.np/ui/images/email/facebook.png" alt="facebook"></a>
+                            <a href="https://www.instagram.com/esewa_official/" target="_blank"><img src="https://cdn.esewa.com.np/ui/images/email/Instagram.png" alt="instagram"></a>
+                            <a href="https://www.youtube.com/@eSewaOfficial"><img src="https://cdn.esewa.com.np/ui/images/email/Youtube.png" alt="youtube"></a>
+                        </div>
+
+                    </div>
+
+                    <div class="es-appstore text-right right">
+                        <div class="es-msg-title">
+                            <h6>Download eSewa App</h6>
+                        </div>
+                        <div class="es-icon">
+                            <ul>
+                                <a href="https://goo.gl/bQAZmt" target="_blank"><img src="https://cdn.esewa.com.np/ui/images/email/playstore.png" alt="playstore"></a>
+                                <a href="https://goo.gl/Ltwtqk" target="_blank"><img src="https://cdn.esewa.com.np/ui/images/email/appstore.png" alt="appstore"></a>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+
+
+------=_Part_508933_225604082.1788421168794--
+
+------=_Part_508932_43132354.1788421168794--
