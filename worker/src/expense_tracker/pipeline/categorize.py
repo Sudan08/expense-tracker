@@ -42,10 +42,10 @@ if TYPE_CHECKING:
 
 CONFIDENCE_THRESHOLD = 0.85
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_TIMEOUT_SECONDS = 10
+OLLAMA_TIMEOUT_SECONDS = int(os.environ.get("EXPENSE_TRACKER_OLLAMA_TIMEOUT", "30"))
 # Which model varies by machine (whatever's been `ollama pull`ed there), so
 # it's an env var rather than hardcoded -- see EXPENSE_TRACKER_* in config.py.
-OLLAMA_MODEL = os.environ.get("EXPENSE_TRACKER_OLLAMA_MODEL", "llama3.2")
+OLLAMA_MODEL = os.environ.get("EXPENSE_TRACKER_OLLAMA_MODEL", "gemma4:12b")
 
 # What each group and category covers, in the terms merchants actually show
 # up as, keyed by the names supabase/seed.sql creates. A category without an
@@ -188,9 +188,11 @@ def model_label(description_raw: str, counterparty: str | None) -> str:
 def _ask_ollama(prompt: str, choices: list[str]) -> tuple[str, float] | None:
     """One question whose answer must be one of `choices`. None on any
     failure: Ollama not running, a bad response, whatever. Never raises."""
+    model = os.environ.get("EXPENSE_TRACKER_OLLAMA_MODEL", OLLAMA_MODEL)
+    timeout = int(os.environ.get("EXPENSE_TRACKER_OLLAMA_TIMEOUT", str(OLLAMA_TIMEOUT_SECONDS)))
     payload = json.dumps(
         {
-            "model": OLLAMA_MODEL,
+            "model": model,
             "prompt": prompt,
             # A JSON schema rather than plain "json": the enum makes Ollama
             # constrain decoding to the exact names, instead of a paraphrase
@@ -214,7 +216,7 @@ def _ask_ollama(prompt: str, choices: list[str]) -> tuple[str, float] | None:
         request = urllib.request.Request(
             OLLAMA_URL, data=payload, headers={"Content-Type": "application/json"}
         )
-        with urllib.request.urlopen(request, timeout=OLLAMA_TIMEOUT_SECONDS) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
             body = json.loads(response.read())
         parsed = _OllamaResponse.model_validate_json(body["response"])
     except (

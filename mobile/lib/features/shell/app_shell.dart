@@ -34,16 +34,7 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
     // dialog on someone who didn't ask for it. Failures here are silent on
     // purpose: staging SMS is a background nicety, and the SMS screen is
     // where the user goes to see what actually happened.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        final result = await ref.read(smsRepositoryProvider).scanIfAlreadyEnrolled();
-        if (result != null && result.uploaded > 0 && mounted) {
-          ref.invalidate(smsStatusCountsProvider);
-        }
-      } catch (_) {
-        // Deliberately swallowed -- see above.
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scanSms());
 
     // Ask for notification permission once the app is actually on screen,
     // then put tonight's reminder in place. Both are best-effort: a denied
@@ -57,6 +48,32 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
         // Deliberately swallowed -- see above.
       }
     });
+  }
+
+  /// Pick up bank SMS that arrived while the app wasn't looking.
+  ///
+  /// SMS is the transport that arrives in seconds -- for Nabil it is how a
+  /// transaction becomes visible today, hours before the email leg reaches
+  /// the next worker sync -- so this runs on cold start *and* on every
+  /// resume, throttled inside the repository. There is no always-on
+  /// component in this architecture to do it on a schedule instead; opening
+  /// the app is the trigger, and the 22:00 reminder is what makes that
+  /// happen at least once a day.
+  ///
+  /// Only ever scans for a user who has already enrolled on the SMS screen:
+  /// scanIfAlreadyEnrolled is a no-op before then, so resuming the app never
+  /// springs a READ_SMS dialog on someone who didn't ask for it. Failures are
+  /// silent on purpose -- staging SMS is a background nicety, and the SMS
+  /// screen is where the user goes to see what actually happened.
+  Future<void> _scanSms() async {
+    try {
+      final result = await ref.read(smsRepositoryProvider).scanIfAlreadyEnrolled();
+      if (result != null && result.uploaded > 0 && mounted) {
+        ref.invalidate(smsStatusCountsProvider);
+      }
+    } catch (_) {
+      // Deliberately swallowed -- see above.
+    }
   }
 
   /// Rewrite tonight's reminder with the counts the app can currently see.
@@ -108,6 +125,10 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
     ref.read(rawMessageIssuesProvider.notifier).ensureFresh();
     ref.read(smsStatusCountsProvider.notifier).ensureFresh();
     ref.read(lastSyncRunProvider.notifier).ensureFresh();
+    // Not just ensureFresh on the counts: those re-read what the worker has
+    // already been given. This reads the handset, which is where a
+    // transaction from the last few minutes actually is.
+    _scanSms();
     _rescheduleReminder();
   }
 
@@ -117,19 +138,39 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
     final reviewCount = ref.watch(reviewQueueProvider).valueOrNull?.length ?? 0;
     final gapCount = ref.watch(openLedgerGapsProvider).valueOrNull?.length ?? 0;
 
+    // Messages the worker couldn't turn into transactions. Invariant 6 says
+    // nothing is silently dropped, and this is the phone's half of honouring
+    // that: a staged SMS that never became a transaction is a hole in the
+    // ledger, and it was previously only visible to someone who went looking
+    // for it in the overflow menu.
+    final smsCounts = ref.watch(smsStatusCountsProvider).valueOrNull ?? const {};
+    final smsNeedsAttention =
+        (smsCounts['FAILED'] ?? 0) + (smsCounts['IGNORED'] ?? 0);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Expense Tracker'),
         actions: [
+          // Promoted out of the overflow menu. Bank SMS is not a settings
+          // page you visit once -- for an SMS-only account it is the entire
+          // ingest path, and for Nabil it is the half that arrives in
+          // seconds rather than at the next sync. Burying the one screen
+          // that shows whether it is working made a broken pipeline look
+          // exactly like a quiet month.
+          IconButton(
+            tooltip: 'Bank SMS',
+            onPressed: () => context.push('/sms'),
+            icon: Badge(
+              label: Text('$smsNeedsAttention'),
+              isLabelVisible: smsNeedsAttention > 0,
+              child: const Icon(Icons.sms_outlined),
+            ),
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             tooltip: 'More',
             onSelected: (route) => context.push(route),
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: '/sms',
-                child: ListTile(leading: Icon(Icons.sms_outlined), title: Text('Bank SMS')),
-              ),
               PopupMenuItem(
                 value: '/data-health',
                 child: ListTile(
@@ -139,6 +180,13 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
                   // your totals, and it was previously invisible unless you
                   // went looking for it.
                   trailing: gapCount == 0 ? null : Badge(label: Text('$gapCount')),
+                ),
+              ),
+              const PopupMenuItem(
+                value: '/statements',
+                child: ListTile(
+                  leading: Icon(Icons.receipt_long_outlined),
+                  title: Text('Statements & exports'),
                 ),
               ),
               const PopupMenuItem(

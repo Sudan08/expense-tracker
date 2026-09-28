@@ -9,6 +9,11 @@ Built around eSewa, Nabil Bank and Laxmi Sunrise, but the parser layer is the
 extension point: [adding your own bank](docs/ADDING_A_PARSER.md) is a single
 file and a fixture.
 
+Where a bank reports the same transaction over both email and SMS — Nabil does
+— both are read, and they **collapse onto one transaction** rather than
+double-counting it. See [Two transports, one
+transaction](docs/EXPENSE_TRACKER_PLAN.md#two-transports-one-transaction).
+
 > **Status:** working personal project, published so others can run and extend
 > it. It is not a hosted service and there is nothing to sign up for — you run
 > the worker on your own machine against your own Supabase project.
@@ -64,6 +69,9 @@ So the project takes some firm positions, documented as
 - **Balance reconciliation.** Consecutive balances that don't add up mean a
   transaction the pipeline never saw; those become `ledger_gaps` you can fill
   in by hand rather than a total that's quietly wrong.
+- **One transaction, however many times the bank tells you about it.** The SMS
+  and the email are reconciled into a single row by database constraint, with
+  each contributing what the other lacks.
 
 ## Repository layout
 
@@ -92,7 +100,7 @@ cd expense-tracker
 # 1. Worker
 cd worker
 python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
-.venv/bin/python -m pytest          # 140 tests, fully offline
+.venv/bin/python -m pytest          # 157 tests, fully offline
 
 # 2. Provision Supabase + credentials (interactive, ~10 minutes)
 cd .. && ./scripts/setup-wizard.sh

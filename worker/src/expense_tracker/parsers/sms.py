@@ -29,6 +29,7 @@ from typing import ClassVar, Protocol
 from expense_tracker.parsers.base import NormalizedTxn
 from expense_tracker.parsers.esewa_statement import EsewaStatementFileParser
 from expense_tracker.parsers.laxmi import LaxmiSmsAlertParser
+from expense_tracker.parsers.nabil_sms import NabilSmsAlertParser
 
 
 @dataclass(frozen=True)
@@ -50,11 +51,25 @@ class SmsParser(Protocol):
     def parse(self, message: SmsMessage) -> list[NormalizedTxn]: ...
 
 
-# laxmi.sms_alert is fit to a single real fixture so far (see laxmi.py's
-# docstring) -- anything that doesn't match its debited/credited-by-NPR shape
-# still lands as IGNORED with the reason recorded (invariant 6), and the body
-# stays in raw_messages for re-parsing once the shape is confirmed.
-SMS_PARSERS: list[SmsParser] = [LaxmiSmsAlertParser(), EsewaStatementFileParser()]
+from expense_tracker.parsers.nabil_statement import NabilStatementFileParser
+
+# Order matters only where two parsers could both claim a body. They can't
+# today -- each gates on its own bank's name appearing in the sender or body
+# -- so this is ordinary priority order, most-used first.
+#
+# nabil.sms_alert and laxmi.sms_alert are both fit to a small number of real
+# fixtures (see each module's docstring) -- anything that doesn't match their
+# shape still lands as IGNORED with the reason recorded (invariant 6), and the
+# body stays in raw_messages for re-parsing once the shape is confirmed.
+#
+# nabil.sms_alert is the one template here with a second transport reporting
+# the same transaction: see nabil_sms.py for how the two collapse.
+SMS_PARSERS: list[SmsParser] = [
+    NabilSmsAlertParser(),
+    LaxmiSmsAlertParser(),
+    EsewaStatementFileParser(),
+    NabilStatementFileParser(),
+]
 
 
 def route_sms(message: SmsMessage) -> SmsParser | None:

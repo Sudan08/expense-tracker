@@ -277,8 +277,50 @@ class PostgresStore:
                      currency, reference, description_raw, counterparty, channel,
                      dedupe_key, parser_version)
                 values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                on conflict (user_id, dedupe_key) do nothing
-                returning id
+                -- Nabil reports one transaction over two transports, and they
+                -- carry different things: the SMS arrives in seconds but
+                -- quotes no balance, the email arrives at the next sync and
+                -- does. They collapse onto one row by dedupe_key
+                -- (parsers/nabil.py), and this is where the second arrival
+                -- contributes what the first couldn't rather than being
+                -- thrown away -- without it, an SMS-first row would keep a
+                -- null balance forever and reconcile.py would skip it, which
+                -- silently disables gap detection for the account.
+                --
+                -- coalesce, so the existing value always wins where it has
+                -- one: this fills blanks, it never overwrites a fact already
+                -- recorded. Everything else about the row -- amount,
+                -- direction, category, status, note -- is left exactly as it
+                -- was, so a re-parse of the same message stays a no-op.
+                on conflict (user_id, dedupe_key) do update set
+                    balance_after_paisa =
+                        coalesce(transactions.balance_after_paisa,
+                                 excluded.balance_after_paisa),
+                    reference = coalesce(transactions.reference, excluded.reference),
+                    -- Nabil's SMS truncates the remarks at 18 characters, so
+                    -- an SMS-first row displays "ATM WDL -03051911-" where the
+                    -- email would have said "ATM WDL -03051911-NABIL-NABIL".
+                    -- Take the longer text when it is an *extension* of what
+                    -- is already stored -- never a different string, which
+                    -- would mean the two rows aren't the same transaction and
+                    -- overwriting would hide that.
+                    -- The wildcard below is written doubled on purpose. This
+                    -- statement is executed with bound parameters, and
+                    -- psycopg scans the whole string -- comments included --
+                    -- treating a single percent sign as the start of a
+                    -- placeholder, so an un-doubled one rejects the query.
+                    description_raw = case
+                        when excluded.description_raw <> transactions.description_raw
+                         and excluded.description_raw like transactions.description_raw || '%%'
+                        then excluded.description_raw
+                        else transactions.description_raw
+                    end,
+                    counterparty = coalesce(transactions.counterparty, excluded.counterparty),
+                    channel = coalesce(transactions.channel, excluded.channel)
+                -- xmax = 0 is true only for a genuine insert, so the caller's
+                -- "inserted" count stays honest now that the conflict path
+                -- returns a row too.
+                returning id, (xmax = 0) as was_inserted
                 """,
                 (
                     user_id,
@@ -300,7 +342,7 @@ class PostgresStore:
                 ),
                 fetch="one",
             )
-            if row is not None:
+            if row is not None and row[1]:
                 inserted += 1
         return inserted
 
@@ -611,6 +653,56 @@ class PostgresStore:
             )[0]
         )
 
+    def fetch_transactions_in_range(
+        self, user_id: str, account_id: str, start: datetime, end: datetime
+    ) -> list[NormalizedTxn]:
+        # Return NormalizedTxn so it can be compared.
+        rows = self._execute(
+            """
+            select
+                template_key, parser_version,
+                'NABIL' as institution, null as account_mask,
+                occurred_at, occurred_precision, direction,
+                amount_paisa, balance_after_paisa, currency,
+                reference, description_raw, counterparty, channel,
+                source_message_id as message_id, dedupe_key
+            from transactions
+            where user_id = %(user_id)s
+              and account_id = %(account_id)s
+              and occurred_at >= %(start)s
+              and occurred_at <= %(end)s
+            order by occurred_at asc
+            """,
+            {
+                "user_id": user_id,
+                "account_id": account_id,
+                "start": start,
+                "end": end,
+            },
+        ).fetchall()
+
+        return [
+            NormalizedTxn(
+                template_key=r[0],
+                parser_version=r[1],
+                institution=r[2],
+                account_mask=r[3],
+                occurred_at=r[4],
+                occurred_precision=r[5],
+                direction=r[6],
+                amount_paisa=r[7],
+                balance_after_paisa=r[8],
+                currency=r[9],
+                reference=r[10],
+                description_raw=r[11],
+                counterparty=r[12],
+                channel=r[13],
+                message_id=r[14] or "none",
+                dedupe_key=r[15],
+            )
+            for r in rows
+        ]
+
 
 def _classify(exc: psycopg.OperationalError, phase: str) -> Exception:
     """psycopg raises OperationalError both for "I could not reach a server"
@@ -622,3 +714,4 @@ def _classify(exc: psycopg.OperationalError, phase: str) -> Exception:
     if exc.sqlstate is not None:
         return exc
     return StoreUnavailable(f"database unreachable during {phase}: {exc}")
+

@@ -34,6 +34,18 @@ def parse_esewa_statement(s: str) -> datetime:
     return datetime.strptime(s.strip(), "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=KATHMANDU)
 
 
+def parse_nabil_sms_alert(s: str) -> datetime:
+    """'15/09/2026 18:16:13' -> tz-aware, SECOND precision.
+
+    DD/MM/YYYY, and unlike the Laxmi SMS this one carries a full clock time.
+    That is the more precise of Nabil's two transports -- the email's
+    Transaction Date column stops at minutes -- which is why
+    nabil_account_dedupe_key truncates to the minute rather than trusting
+    these seconds to appear on both sides.
+    """
+    return datetime.strptime(s.strip(), "%d/%m/%Y %H:%M:%S").replace(tzinfo=KATHMANDU)
+
+
 def parse_laxmi_sms_alert(s: str) -> datetime:
     """'11/09/26' -> tz-aware, DAY precision (no time given).
 
@@ -42,3 +54,7 @@ def parse_laxmi_sms_alert(s: str) -> datetime:
     MM/DD/YY (November). Revisit if a fixture ever shows day > 12.
     """
     return datetime.strptime(s.strip(), "%d/%m/%y").replace(tzinfo=KATHMANDU)
+
+def parse_nabil_statement(s: str) -> datetime:
+    """'2026-09-02 00:00:00' -> tz-aware, DAY precision."""
+    return datetime.strptime(s.strip(), "%Y-%m-%d %H:%M:%S").replace(tzinfo=KATHMANDU)

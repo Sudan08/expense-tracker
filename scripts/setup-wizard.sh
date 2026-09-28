@@ -74,6 +74,18 @@ open_url() {
   } >/dev/null 2>&1 || warn "couldn't open a browser, so visit it manually: $url"
 }
 
+# _run_python runs a command using worker/.venv/bin/python or system python3
+_run_python() {
+  local py="${REPO_ROOT:-.}/worker/.venv/bin/python"
+  if [[ -x "$py" ]]; then
+    "$py" "$@"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 "$@"
+  else
+    return 1
+  fi
+}
+
 # pause "msg" waits for the human to confirm they've done the manual part.
 pause() {
   printf '  %s%s%s ' "$DIM" "${1:-Press Enter to continue}" "$RESET"
@@ -184,14 +196,14 @@ finish() {
 # Replace the example below. Set TOTAL_STAGES to match the stages you write.
 # ──────────────────────────────────────────────────────────────────────────
 
-TOTAL_STAGES=9
+TOTAL_STAGES=10
 
 EXPENSE_TRACKER_HOME="$HOME/.expense-tracker"
 mkdir -p "$EXPENSE_TRACKER_HOME"
 ENV_FILE="$EXPENSE_TRACKER_HOME/.env"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-banner "Expense tracker: Phase 2 infrastructure setup"
+banner "Expense tracker: Infrastructure and client setup"
 
 # ── Stage 1: create the Supabase project ───────────────────────────────────
 stage "Create your Supabase project"
@@ -219,25 +231,60 @@ ask_secret EXPENSE_TRACKER_DB_URL "Paste the direct connection string:"
 write_env EXPENSE_TRACKER_DB_URL "$EXPENSE_TRACKER_DB_URL"
 
 # ── Stage 3: apply the schema migration ─────────────────────────────────────
-stage "Apply the schema migration"
-say "supabase/migrations/20260901000000_initial_schema.sql -- tables, RLS,"
-say "the security_invoker view. Two ways to run it; pick whichever's less friction."
+stage "Apply the schema migrations"
+say "Tables, RLS, views and indexes (supabase/schema.sql or migrations/*.sql)."
 say ""
-if command -v supabase >/dev/null 2>&1; then
-  note "Supabase CLI found."
-  if confirm "Link this repo and push the migration now (supabase link + db push)?"; then
-    (cd "$REPO_ROOT" && supabase link --project-ref "$PROJECT_REF" && supabase db push) \
-      && note "migration pushed" \
-      || warn "CLI push failed -- fall back to the SQL editor below"
+MIGRATIONS_APPLIED=false
+if _run_python -c "import psycopg" >/dev/null 2>&1; then
+  note "Python psycopg found."
+  if confirm "Apply all migrations automatically now over your direct DB connection?"; then
+    if _run_python -c "
+import psycopg, pathlib, sys
+db_url = '$EXPENSE_TRACKER_DB_URL'
+root = pathlib.Path('$REPO_ROOT')
+try:
+    with psycopg.connect(db_url, autocommit=True) as conn:
+        for m in sorted((root / 'supabase/migrations').glob('*.sql')):
+            print(f'  Applying {m.name}...')
+            conn.execute(m.read_text())
+    print('  ✓ All migrations applied successfully!')
+except Exception as e:
+    print(f'  ⚠ Failed to apply: {e}', file=sys.stderr)
+    sys.exit(1)
+"; then
+      MIGRATIONS_APPLIED=true
+      note "migrations applied"
+    else
+      warn "Automatic migration failed -- fall back to manual below."
+    fi
   fi
-else
-  note "Supabase CLI not found (brew install supabase/tap/supabase to get it)."
 fi
-say "Zero-install fallback: paste the SQL directly."
-open_url "https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new"
-step "Open ${REPO_ROOT}/supabase/migrations/20260901000000_initial_schema.sql"
-step "in an editor, copy the whole file, paste it into the SQL editor, and hit Run."
-pause "Press Enter once the migration has run without errors."
+
+if [[ "$MIGRATIONS_APPLIED" != "true" ]]; then
+  if command -v supabase >/dev/null 2>&1; then
+    note "Supabase CLI found."
+    if confirm "Link this repo and push migrations now (supabase link + db push)?"; then
+      (cd "$REPO_ROOT" && supabase link --project-ref "$PROJECT_REF" && supabase db push) \
+        && MIGRATIONS_APPLIED=true \
+        || warn "CLI push failed -- fall back to the SQL editor below"
+    fi
+  fi
+fi
+
+if [[ "$MIGRATIONS_APPLIED" != "true" ]]; then
+  say "Zero-install fallback: paste supabase/schema.sql directly."
+  if command -v pbcopy >/dev/null 2>&1; then
+    pbcopy < "${REPO_ROOT}/supabase/schema.sql"
+    note "Copied supabase/schema.sql to your clipboard!"
+  elif command -v xclip >/dev/null 2>&1; then
+    xclip -selection clipboard < "${REPO_ROOT}/supabase/schema.sql"
+    note "Copied supabase/schema.sql to your clipboard!"
+  fi
+  open_url "https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new"
+  step "Open ${REPO_ROOT}/supabase/schema.sql (all migrations consolidated),"
+  step "copy the entire file, paste it into the SQL editor, and click Run."
+  pause "Press Enter once the migrations have run without errors."
+fi
 
 # ── Stage 4: create your auth user ──────────────────────────────────────────
 stage "Create your Supabase Auth user"
@@ -252,16 +299,67 @@ write_env EXPENSE_TRACKER_USER_ID "$EXPENSE_TRACKER_USER_ID"
 
 # ── Stage 5: seed starter categories ────────────────────────────────────────
 stage "Seed starter categories"
-say "supabase/seed.sql has the starting category list from plan section 10"
-say "(Food, Groceries, Transport, ... Transfer, Salary marked is_spend=false)."
-open_url "https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new"
-step "Open ${REPO_ROOT}/supabase/seed.sql, copy its contents into the SQL editor,"
-step "then replace every :'user_id' with '${EXPENSE_TRACKER_USER_ID}' (with the"
-step "quotes) before running it -- the file uses a psql variable that the web"
-step "SQL editor can't substitute for you."
-pause "Press Enter once the categories are inserted."
+say "supabase/seed.sql has the starter categories, accounts (Cash/Laxmi), and rules."
+CATEGORIES_SEEDED=false
+if _run_python -c "import psycopg" >/dev/null 2>&1; then
+  if confirm "Seed starter categories automatically now using direct DB connection?"; then
+    if _run_python -c "
+import psycopg, pathlib, sys
+db_url = '$EXPENSE_TRACKER_DB_URL'
+user_id = '$EXPENSE_TRACKER_USER_ID'
+seed_path = pathlib.Path('$REPO_ROOT/supabase/seed.sql')
+sql = seed_path.read_text().replace(\":'user_id'\", f\"'{user_id}'\")
+try:
+    with psycopg.connect(db_url, autocommit=True) as conn:
+        conn.execute(sql)
+    print('  ✓ Starter categories and accounts seeded successfully!')
+except Exception as e:
+    print(f'  ⚠ Seeding failed: {e}', file=sys.stderr)
+    sys.exit(1)
+"; then
+      CATEGORIES_SEEDED=true
+      note "categories seeded"
+    else
+      warn "Automatic seeding failed -- fall back to manual below."
+    fi
+  fi
+fi
 
-# ── Stage 6: Gmail app password ─────────────────────────────────────────────
+if [[ "$CATEGORIES_SEEDED" != "true" ]]; then
+  if command -v pbcopy >/dev/null 2>&1; then
+    sed "s/:'user_id'/'${EXPENSE_TRACKER_USER_ID}'/g" "${REPO_ROOT}/supabase/seed.sql" | pbcopy
+    note "Copied pre-substituted seed.sql to your clipboard!"
+  elif command -v xclip >/dev/null 2>&1; then
+    sed "s/:'user_id'/'${EXPENSE_TRACKER_USER_ID}'/g" "${REPO_ROOT}/supabase/seed.sql" | xclip -selection clipboard
+    note "Copied pre-substituted seed.sql to your clipboard!"
+  fi
+  open_url "https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new"
+  step "Open ${REPO_ROOT}/supabase/seed.sql, copy its contents into the SQL editor,"
+  step "then replace every :'user_id' with '${EXPENSE_TRACKER_USER_ID}' (with the"
+  step "quotes) before running it."
+  pause "Press Enter once the categories are inserted."
+fi
+
+# ── Stage 6: configure mobile app ───────────────────────────────────────────
+stage "Configure the mobile app (mobile/.env)"
+say "The Flutter app reads the ledger from Supabase directly."
+say "It needs the Supabase URL and the anonymous (public) API key."
+open_url "https://supabase.com/dashboard/project/${PROJECT_REF}/settings/api"
+step "Under 'Project API keys', copy the 'anon' / 'public' key (NOT service_role)."
+ask_secret SUPABASE_ANON_KEY "Paste the anon key:"
+MOBILE_ENV="$REPO_ROOT/mobile/.env"
+cat > "$MOBILE_ENV" <<EOF
+# Configured by scripts/setup-wizard.sh
+SUPABASE_URL=https://${PROJECT_REF}.supabase.co
+SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+
+# Sender IDs of banks whose SMS to collect, comma-separated (e.g. NABIL_ALERT,LAXMI_ALERT)
+SMS_SENDERS=
+EOF
+printf '  %s✓ wrote%s %s\n' "$GREEN" "$RESET" "$MOBILE_ENV"
+note "To collect bank SMS on Android, edit SMS_SENDERS in mobile/.env"
+
+# ── Stage 7: Gmail app password ─────────────────────────────────────────────
 stage "Gmail app password for IMAP"
 say "This is separate from any Gmail OAuth access already granted elsewhere --"
 say "it's a standalone app password the worker's IMAP client (imap-tools) uses"
@@ -275,7 +373,7 @@ ask_secret EXPENSE_TRACKER_IMAP_PASSWORD "Paste the app password (spaces will be
 EXPENSE_TRACKER_IMAP_PASSWORD="${EXPENSE_TRACKER_IMAP_PASSWORD// /}"
 write_env EXPENSE_TRACKER_IMAP_PASSWORD "$EXPENSE_TRACKER_IMAP_PASSWORD"
 
-# ── Stage 7: local config.toml ──────────────────────────────────────────────
+# ── Stage 8: local config.toml ──────────────────────────────────────────────
 stage "Write ~/.expense-tracker/config.toml"
 say "The non-secret half of the worker's config (plan section 3); .env above"
 say "holds the secrets, this holds everything else."
@@ -302,7 +400,7 @@ nabil = "nabilbank.com"
 TOML
 printf '  %s✓ wrote%s %s\n' "$GREEN" "$RESET" "$CONFIG_PATH"
 
-# ── Stage 8: smoke test ─────────────────────────────────────────────────────
+# ── Stage 9: smoke test ─────────────────────────────────────────────────────
 stage "Smoke test"
 say "Confirms config.toml + .env are wired up before trusting a real sync."
 VENV_CLI="$REPO_ROOT/worker/.venv/bin/expense-tracker"
@@ -320,7 +418,7 @@ else
   note "then: $VENV_CLI status"
 fi
 
-# ── Stage 9: schedule the twice-daily sync ──────────────────────────────────
+# ── Stage 10: schedule the twice-daily sync ─────────────────────────────────
 stage "Schedule the twice-daily sync"
 say "Section 6.4 -- a systemd --user timer on Linux, a launchd agent on macOS."
 say "Runs at 10:30 and 21:30; the evening one refreshes ledger gaps just"

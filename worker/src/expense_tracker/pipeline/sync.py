@@ -246,6 +246,11 @@ def _ingest_sms(store: Store, user_id: str, result: SyncResult) -> None:
             sms.id, "PARSED", parser.template_key, parser.parser_version, None, len(txns),
         )
         result.sms_parsed += 1
-        result.txns_inserted += upsert_by_account(
-            store, user_id, txns, raw_message_id=sms.id
-        )
+        
+        if parser.template_key in ("nabil.statement_row", "bank.statement_row"):
+            from expense_tracker.pipeline.statement_audit import audit_and_insert_missing
+            result.txns_inserted += audit_and_insert_missing(store, user_id, txns, sms.id)
+        else:
+            result.txns_inserted += upsert_by_account(
+                store, user_id, txns, raw_message_id=sms.id
+            )

@@ -47,13 +47,30 @@ class DataHealthScreen extends ConsumerWidget {
               subtitle: 'A jump in your balance with no matching transaction — '
                   'money moved and the pipeline never saw why. Tap one to look '
                   'it up in your bank app and record it yourself.',
-              child: AsyncValueView(
-                value: gaps,
-                data: (rows) => rows.isEmpty
-                    ? const _AllClear('No open gaps.')
-                    : Column(children: [for (final g in rows) _GapTile(gap: g)]),
-                loading: () => const _SectionLoading(),
-                error: (e) => _SectionError(e),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AsyncValueView(
+                    value: gaps,
+                    data: (rows) => rows.isEmpty
+                        ? const _AllClear('No open gaps.')
+                        : Column(children: [for (final g in rows) _GapTile(gap: g)]),
+                    loading: () => const _SectionLoading(),
+                    error: (e) => _SectionError(e),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    elevation: 0,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    child: ListTile(
+                      leading: const Icon(Icons.receipt_long_outlined),
+                      title: const Text('Resolve gaps with bank statement'),
+                      subtitle: const Text('Upload monthly PDF/XLS export to verify and close gaps'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/statements'),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),

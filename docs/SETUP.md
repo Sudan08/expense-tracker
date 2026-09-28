@@ -27,7 +27,7 @@ python3 -m venv .venv
 .venv/bin/python -m pytest
 ```
 
-Expected: **140 passed, 21 skipped**. The skips are integration tests that
+Expected: **157 passed, 26 skipped**. The skips are integration tests that
 want a real Postgres; see [Running the database tests](#running-the-database-tests).
 
 Requires Python 3.12+.
@@ -48,15 +48,16 @@ From Project Settings → Database, copy the **direct** connection URI (the
 `URI` tab, *Direct connection* mode — not the transaction or session pooler;
 the worker does bulk upserts with psycopg and wants the direct connection).
 
-With the Supabase CLI:
+Pick whichever method is easiest:
 
-```bash
-supabase link --project-ref <your-ref>
-supabase db push
-```
-
-Or paste each file in `supabase/migrations/` into the dashboard SQL editor,
-in filename order.
+- **Setup wizard (fastest):** `./scripts/setup-wizard.sh` applies all migrations automatically using your direct connection string.
+- **Supabase CLI:**
+  ```bash
+  supabase link --project-ref <your-ref>
+  supabase db push
+  ```
+- **Dashboard SQL Editor (zero install):**
+  Open `supabase/schema.sql` (all migrations consolidated in order), copy its contents, paste into the Supabase SQL editor, and click **Run**.
 
 ## 4. Create your user and seed categories
 
@@ -195,21 +196,49 @@ the app — row-level security is what actually protects the data.
 Sign in with the user you created in step 4.
 
 To collect bank SMS on Android, set `SMS_SENDERS` in `mobile/.env` to a
-comma-separated list of sender IDs (e.g. `SMS_SENDERS=LaxmiBank,LaxmiSunrise`).
+comma-separated list of sender IDs (e.g. `SMS_SENDERS=NabilBank,LaxmiSunrise`).
 It is **default-deny**: leave it empty and the app uploads no SMS at all. Your
 inbox also holds OTPs and personal messages, so list only bank senders.
+
+**List a bank here even if it also emails you.** Nabil sends both, and the two
+are read together: the SMS arrives within seconds while the email only shows
+up at the next worker sync, and the email is the one carrying the running
+balance that gap detection needs. They collapse onto a single transaction
+rather than double-counting — see
+[plan section 8.6](EXPENSE_TRACKER_PLAN.md#two-transports-one-transaction).
+
+The app scans the handset on launch and on every resume (throttled to once a
+minute), so transactions appear shortly after you next open it. There is no
+always-on component to do it on a schedule instead — the 22:00 reminder is
+what makes sure you open the app at least once a day.
 
 ---
 
 ## Running the database tests
 
-21 tests need a real Postgres. Point them at a throwaway database:
+26 tests need a real Postgres — they exercise the unique constraints and the
+`ON CONFLICT` behaviour that the dedupe guarantees actually live in, which
+cannot be checked in Python. Point them at a throwaway database:
 
 ```bash
 createdb expense_tracker_test
 EXPENSE_TRACKER_TEST_DB_URL=postgresql://localhost/expense_tracker_test \
-  .venv/bin/python -m pytest
+  .venv/bin/python -m pytest          # 183 passed, 0 skipped
 ```
+
+No Postgres installed and don't want one? `pip install pgserver` ships its own
+binaries, no system install or sudo:
+
+```python
+import pgserver, pathlib
+srv = pgserver.get_server(pathlib.Path("/tmp/pgdata"), cleanup_mode=None)
+srv.psql("create database et_test")
+print(srv.get_uri().replace("/postgres?", "/et_test?"))
+```
+
+That build is minimal and lacks `pg_trgm`, so the one migration that adds
+trigram indexes (`20260913020000`) won't apply — the indexes are a
+performance concern only, and every other migration and test runs.
 
 They apply the migrations themselves. Never point this at the database
 holding your real ledger.

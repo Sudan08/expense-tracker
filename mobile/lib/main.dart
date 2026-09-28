@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,6 +8,10 @@ import 'app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   String? url;
   String? anonKey;
@@ -18,7 +23,12 @@ Future<void> main() async {
     // .env isn't bundled yet -- fall through to the setup screen below.
   }
 
-  if (url == null || url.isEmpty || anonKey == null || anonKey.isEmpty) {
+  if (url == null ||
+      url.isEmpty ||
+      anonKey == null ||
+      anonKey.isEmpty ||
+      url.contains('YOUR-PROJECT-REF') ||
+      anonKey == 'your-anon-key') {
     runApp(const _NotConfiguredApp());
     return;
   }

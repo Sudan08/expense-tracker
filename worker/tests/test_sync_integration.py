@@ -33,6 +33,12 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures" / "emails"
 SEED_SQL = (Path(__file__).parent.parent.parent / "supabase" / "seed.sql").read_text()
 SENDERS = ["esewa.com.np", "nabilbank.com"]
 
+# Derived, not hard-coded. This was literally `30` in eight assertions while the
+# corpus held 31 files -- and because every test in this module is skipped
+# without a database, nothing noticed. Counting the directory means adding a
+# fixture can't silently break a test nobody runs locally.
+FIXTURE_COUNT = len(sorted(FIXTURES_DIR.glob("*/*.eml")))
+
 
 class FakeMailSource:
     """Every fixture .eml, every call -- imitates fetching the same overlap
@@ -105,7 +111,7 @@ def store():
 
 def test_sync_twice_inserts_zero_duplicates(tmp_path, user_id, store):
     all_fixtures = sorted(FIXTURES_DIR.glob("*/*.eml"))
-    assert len(all_fixtures) == 30
+    assert len(all_fixtures) == FIXTURE_COUNT
 
     mail_source = FakeMailSource(all_fixtures)
     account_start = datetime(2026, 1, 1, tzinfo=timezone.utc)
@@ -116,26 +122,26 @@ def test_sync_twice_inserts_zero_duplicates(tmp_path, user_id, store):
         user_id=user_id, machine="test-machine", senders=SENDERS,
         account_start=account_start,
     )
-    assert first.fetched == 30
-    assert first.parsed == 30
+    assert first.fetched == FIXTURE_COUNT
+    assert first.parsed == FIXTURE_COUNT
     assert first.failed == 0
-    assert first.txns_inserted == 30
+    assert first.txns_inserted == FIXTURE_COUNT
 
     second = run_sync(
         store=store, mail_source=mail_source, archive_dir=archive_dir,
         user_id=user_id, machine="test-machine", senders=SENDERS,
         account_start=account_start,
     )
-    assert second.fetched == 30
-    assert second.parsed == 30
+    assert second.fetched == FIXTURE_COUNT
+    assert second.parsed == FIXTURE_COUNT
     assert second.txns_inserted == 0, "second run must insert zero rows"
 
     with psycopg.connect(DB_URL) as conn, conn.cursor() as cur:
         cur.execute("select count(*) from transactions where user_id = %s", (user_id,))
-        assert cur.fetchone()[0] == 30
+        assert cur.fetchone()[0] == FIXTURE_COUNT
 
         cur.execute("select count(*) from processed_emails where user_id = %s", (user_id,))
-        assert cur.fetchone()[0] == 30
+        assert cur.fetchone()[0] == FIXTURE_COUNT
 
 
 def test_sync_survives_crash_before_db_write(tmp_path, user_id, store):
@@ -298,7 +304,7 @@ def test_categorization_hits_phase4_dod_and_is_idempotent(tmp_path, seeded_user_
     """Phase 4 DoD: '>= 80% of the last three months auto-categorized by
     rules alone, with the Ollama path disabled.' Runs the full sync pipeline
     (steps 1-9) end to end against the real supabase/seed.sql rules and all
-    30 real Phase 0 fixtures, then re-runs it to confirm the categorizer
+    the whole Phase 0 fixture corpus, then re-runs it to confirm the categorizer
     doesn't touch already-CATEGORIZED rows or re-count them.
     """
     user_id = seeded_user_id

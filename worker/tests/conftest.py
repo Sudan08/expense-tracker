@@ -32,7 +32,19 @@ def _apply_migrations_once():
             already_applied = cur.fetchone()[0]
         if not already_applied:
             with conn.cursor() as cur:
-                cur.execute("create extension if not exists pgcrypto")
+                # Best-effort, not required. This was here for
+                # gen_random_uuid(), which has been core since Postgres 13 --
+                # and nothing in supabase/migrations/ calls a pgcrypto
+                # function any more (the Nabil key rewrite deliberately uses
+                # core sha256() rather than pgcrypto's digest(), so that it
+                # works on a Supabase project where pgcrypto lives in a
+                # separate `extensions` schema). Minimal Postgres builds ship
+                # without the extension, and refusing to run the suite
+                # against one for a line we don't need is pure friction.
+                try:
+                    cur.execute("create extension if not exists pgcrypto")
+                except psycopg.errors.FeatureNotSupported:
+                    conn.rollback()
                 cur.execute("create schema if not exists auth")
                 cur.execute(
                     "create table if not exists auth.users "

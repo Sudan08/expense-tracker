@@ -613,6 +613,72 @@ to arrive.
 
 ---
 
+### 8.6 Nabil — SMS as well as email
+
+*Added 2026-09-15, after `nabil.sms_alert` landed.*
+
+Nabil reports the same transaction twice, and the two reports are not
+redundant — each carries something the other doesn't:
+
+| | arrives | account written as | clock | balance |
+| --- | --- | --- | --- | --- |
+| `nabil.sms_alert` | seconds | `001##34567` | to the second | **no** |
+| `nabil.txn_alert` | next sync (≤12h) | `001#####234567` | to the minute | **yes** |
+
+So neither can be dropped. The SMS is what makes a transaction visible today.
+The balance only the email carries is what feeds reconciliation (section 7.3),
+which is the only mechanism that detects a transaction the pipeline never saw
+at all — take it away and gap detection silently stops working for the account,
+a failure indistinguishable from a clean ledger.
+
+#### Two transports, one transaction
+
+The obvious hazard is double-counting, and there are two distinct ways it
+happens:
+
+1. **Two accounts.** `accounts` is keyed on `(user_id, institution, mask)`,
+   and the two transports write the mask differently. Left alone that is two
+   Nabil rows for one real account, with the balance chain split across them
+   so reconciliation walks half a history.
+2. **Two transactions.** `dedupe_key` embedded the mask and a hash of the
+   verbatim remarks, so the same transaction produced two different keys.
+
+Both are fixed by reducing each report to what the transports actually agree
+on, in `parsers/nabil.py`:
+
+- **Canonical mask** — the digits both show: first 3 + last 5. `001##34567` and
+  `001#####234567` both become `00134567`. Applied to the account identity and
+  to the key. Deliberately *not* applied to `nabil.card_txn`: a card mask
+  carries four digits, and reducing it could collide with a bank account.
+- **Timestamp truncated to the minute** — the coarser of the two. A key built
+  from the SMS's seconds could never match one built from the email's minutes.
+- **Remarks fingerprint** — `sha1` of the remarks uppercased, stripped to
+  alphanumerics, first 24 characters. The raw string doesn't work: the email's
+  Remarks column truncates at 50 characters and spacing differs between
+  transports. 24 alphanumeric characters sits inside that truncation point
+  while still separating two transactions that differ only by reference.
+
+The collapse itself stays where invariant 5 says it belongs — the unique
+constraint on `(user_id, dedupe_key)`, not application logic. Whichever
+transport arrives first creates the row; the second is absorbed by
+`ON CONFLICT`, which `coalesce`s in a `balance_after_paisa` the first couldn't
+supply. Nothing downstream learns which arrived first.
+
+**Residual risk, accepted.** Two genuinely distinct transactions on one
+account, in the same minute, same direction, same amount, whose remarks agree
+for 24 alphanumeric characters, would collapse into one. That is the price of
+a key that two transports can both compute; the remarks fingerprint is what
+keeps it this narrow rather than dropping remarks from the key entirely.
+
+**Migration.** Changing the key format means rows already in the database
+carry the old one, and a constraint-based dedupe would read them as different
+transactions and insert a second copy of each. `supabase/migrations/
+20260915000000_nabil_sms_cross_transport.sql` rewrites the existing
+`nabil.txn_alert` keys and merges the accounts in the same change that
+introduces the new format.
+
+---
+
 ## 9. Schema (Supabase)
 
 Every table carries `user_id` even though you're the only user. Retrofitting RLS

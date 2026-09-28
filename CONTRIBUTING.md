@@ -25,10 +25,10 @@ No credentials, database or network needed to work on the worker:
 cd worker
 python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
-.venv/bin/python -m pytest      # 140 passed, 21 skipped
+.venv/bin/python -m pytest      # 157 passed, 26 skipped
 ```
 
-The 21 skips are integration tests wanting a real Postgres:
+The 26 skips are integration tests wanting a real Postgres:
 
 ```bash
 createdb expense_tracker_test

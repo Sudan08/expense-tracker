@@ -1,6 +1,7 @@
 # Adding a parser for your bank
 
-Out of the box this reads eSewa, Nabil Bank (email) and Laxmi Sunrise (SMS).
+Out of the box this reads eSewa (email), Nabil Bank (email **and** SMS) and
+Laxmi Sunrise (SMS).
 Adding another is the most useful contribution you can make, and it is
 deliberately a small job: one module, one fixture, one expectation.
 
@@ -167,9 +168,41 @@ fetch, which makes iterating on a template cheap once the mail is downloaded.
 ## SMS parsers
 
 Same shape, but simpler — SMS bodies are plain text staged into `raw_messages`
-by the phone. Parsers live in `parsers/sms.py` and route via `route_sms()`;
-[`parsers/laxmi.py`](../worker/src/expense_tracker/parsers/laxmi.py) is the
-worked example. Fixtures are `.txt` files under `tests/fixtures/sms/<bank>/`.
+by the phone. Parsers are registered in `parsers/sms.py` and route via
+`route_sms()`; [`parsers/laxmi.py`](../worker/src/expense_tracker/parsers/laxmi.py)
+is the simplest worked example. Fixtures are `.txt` files under
+`tests/fixtures/sms/<bank>/`, redacted exactly like email ones.
+
+### If your bank sends both an SMS and an email
+
+Then you have to decide what happens when the same transaction arrives twice,
+and the answer is not "pick one" — the transports usually carry different
+things. Nabil's SMS arrives in seconds but quotes no balance; its email
+arrives at the next sync and does, and the balance is what reconciliation
+needs.
+
+[`parsers/nabil_sms.py`](../worker/src/expense_tracker/parsers/nabil_sms.py) is
+the worked example, and
+[plan section 8.6](EXPENSE_TRACKER_PLAN.md#two-transports-one-transaction)
+explains the reasoning. The shape of it:
+
+- **Make both parsers compute the same `dedupe_key`.** Build it only from what
+  both transports agree on — and check what they actually disagree about
+  first. For Nabil that was the account mask (different masking styles), the
+  clock (seconds vs minutes) and the remarks (the email truncates at 50
+  characters).
+- **Make both resolve to the same `account_mask`.** `accounts` is keyed on it,
+  so two spellings mean two accounts and a balance chain split in half.
+- **Let the database collapse them**, not an "have I seen this?" lookup. The
+  unique constraint is the mechanism (invariant 5).
+- **Let the second arrival fill in blanks.** `upsert_transactions` coalesces a
+  balance the first transport couldn't supply.
+- **Test the collision explicitly**, in both arrival orders — see
+  `tests/test_parsers_nabil_sms.py` and `tests/test_nabil_cross_transport.py`.
+
+If you change an existing key format to do this, ship a migration that
+rewrites the rows already in the database. Without one, the next sync reads
+every existing transaction as new and inserts a duplicate.
 
 The SMS path is deliberately re-scannable: a message the phone backfills from
 six months ago is picked up on the next run rather than skipped for arriving

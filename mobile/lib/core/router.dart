@@ -14,6 +14,7 @@ import '../features/review/review_queue_screen.dart';
 import '../features/rules/merchant_rules_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/sms/sms_screen.dart';
+import '../features/statements/statements_screen.dart';
 import '../features/transactions/transaction_detail_screen.dart';
 import '../features/transactions/transaction_list_screen.dart';
 import 'supabase/supabase_providers.dart';
@@ -77,6 +78,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => GapFillRoute(gapId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/data-health', builder: (context, state) => const DataHealthScreen()),
+      GoRoute(path: '/statements', builder: (context, state) => const StatementsScreen()),
+      GoRoute(path: '/exports', builder: (context, state) => const StatementsScreen()),
       GoRoute(path: '/merchant-rules', builder: (context, state) => const MerchantRulesScreen()),
       GoRoute(
         path: '/transactions/:id',

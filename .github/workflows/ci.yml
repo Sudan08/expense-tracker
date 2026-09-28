@@ -97,6 +97,10 @@ jobs:
         with:
           channel: stable
 
+      - name: Setup mobile .env
+        working-directory: mobile
+        run: cp .env.example .env
+
       - name: Install
         working-directory: mobile
         run: flutter pub get

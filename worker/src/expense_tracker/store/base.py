@@ -243,3 +243,7 @@ class Store(Protocol):
     def create_merchant_rule(
         self, user_id: str, pattern: str, category_id: str, learned_from_user: bool
     ) -> str: ...
+
+    def fetch_transactions_in_range(
+        self, user_id: str, account_id: str, start: datetime, end: datetime
+    ) -> list[NormalizedTxn]: ...

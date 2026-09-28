@@ -213,6 +213,24 @@ class SmsRepository {
     return SmsScanResult(matched: rows.length, uploaded: uploaded, since: since);
   }
 
+  /// Throttle for the unprompted scan, which now runs on every resume rather
+  /// than only on a cold start. Bank SMS is the transport that arrives in
+  /// seconds, so the whole point is that it is picked up promptly -- but
+  /// "resumed" also fires when the user flicks to another app and straight
+  /// back, and each scan costs an inbox read plus a watermark query. A minute
+  /// is long enough to collapse that thrash and short enough that coming back
+  /// to the app still feels like it just checked.
+  static const _rescanThrottle = Duration(minutes: 1);
+  DateTime? _lastScanAt;
+
+  /// True if [scanIfAlreadyEnrolled] would do real work rather than being
+  /// throttled away. Exposed so a deliberate, user-initiated scan can bypass
+  /// the throttle without duplicating the rule.
+  bool get isThrottled {
+    final last = _lastScanAt;
+    return last != null && DateTime.now().difference(last) < _rescanThrottle;
+  }
+
   /// The startup scan. Never prompts: this runs unasked on every app open,
   /// and springing a permission dialog there -- or retrying against a
   /// permanently-denied one -- is how a permission gets denied for good in
@@ -220,10 +238,15 @@ class SmsRepository {
   /// so a "not yet granted" or "permanently denied" phone just skips this
   /// silently. First-time enrolment, and recovering from a denial, both
   /// happen on the SMS screen, where the user actually asked for it.
-  Future<SmsScanResult?> scanIfAlreadyEnrolled() async {
+  /// [force] skips the resume throttle, for a scan the user asked for.
+  Future<SmsScanResult?> scanIfAlreadyEnrolled({bool force = false}) async {
     if (!isSupported || senders.isEmpty) return null;
+    if (!force && isThrottled) return null;
     if (!await hasPermission()) return null;
     if (await lastUploadedAt() == null) return null;
+    // Stamped before the scan, not after: a scan that throws still counts as
+    // an attempt, so a persistently failing one can't spin on every resume.
+    _lastScanAt = DateTime.now();
     return scanAndUpload();
   }
 
